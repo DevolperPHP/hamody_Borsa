@@ -146,6 +146,7 @@ class GoldPriceProvider with ChangeNotifier {
 
   String formatPrice(double price) {
     if (price == 0) return '0 د.ع';
+    // For IQD prices, use integer (no decimal places)
     final formatted = price.toStringAsFixed(0).replaceAllMapped(
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
       (Match m) => '${m[1]},',
@@ -155,12 +156,14 @@ class GoldPriceProvider with ChangeNotifier {
 
   String formatGoldPrice(double price) {
     if (price == 0) return '0 \$';
+    // For USD prices, use 2 decimal places
     final formatted = price.toStringAsFixed(2);
     return '$formatted \$';
   }
 
   String formatIQDPrice(double price) {
     if (price == 0) return '0 د.ع';
+    // For IQD prices, use integer (no decimal places)
     final formatted = price.toStringAsFixed(0).replaceAllMapped(
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
       (Match m) => '${m[1]},',
