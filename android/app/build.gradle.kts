@@ -24,7 +24,7 @@ android {
         applicationId = "com.hamoudi.borsa"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 21  // Android 5.0 (Lollipop) - widely supported
+        minSdk = flutter.minSdkVersion  // Android 5.0 (Lollipop) - widely supported
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
