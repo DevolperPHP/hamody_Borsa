@@ -270,7 +270,7 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
                           fit: BoxFit.scaleDown,
                           alignment: Alignment.centerRight,
                           child: Text(
-                            '\$${_formatNumber(currentPriceUSD)}',
+                            '\$${_formatNumber(currentPriceUSD, isPrice: true)}',
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w700,
@@ -302,7 +302,7 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
                           fit: BoxFit.scaleDown,
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            '${_formatNumber(currentPriceIQD)} د.ع',
+                            '${_formatNumber(currentPriceIQD, isPrice: true)} د.ع',
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w700,
@@ -562,7 +562,7 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        '${_formatNumber(gramAmount)} جرام × ${_formatNumber(pricePerGram)} د.ع',
+                        '${_formatNumber(gramAmount)} جرام × ${_formatNumber(pricePerGram, isPrice: true)} د.ع',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.white.withValues(alpha: 0.9),
@@ -571,7 +571,7 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
                       if (additionalPrice > 0) ...[
                         const SizedBox(height: 4),
                         Text(
-                          '+ ${_formatNumber(additionalPrice)} د.ع مصنعية',
+                          '+ ${_formatNumber(additionalPrice, isPrice: true)} د.ع مصنعية',
                           style: TextStyle(
                             fontSize: 13,
                             color: Colors.white.withValues(alpha: 0.9),
@@ -623,10 +623,10 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
                         ),
                         const SizedBox(height: 16),
                         _buildDetailRow('عيار الذهب', provider.selectedCarat.displayName),
-                        _buildDetailRow('سعر الجرام', '${_formatNumber(pricePerGram)} د.ع'),
+                        _buildDetailRow('سعر الجرام', '${_formatNumber(pricePerGram, isPrice: true)} د.ع'),
                         _buildDetailRow('الوزن', '${_formatNumber(gramAmount)} جرام'),
                         if (additionalPrice > 0)
-                          _buildDetailRow('سعر المصنعية', '${_formatNumber(additionalPrice)} د.ع/جرام'),
+                          _buildDetailRow('سعر المصنعية', '${_formatNumber(additionalPrice, isPrice: true)} د.ع/جرام'),
                         const SizedBox(height: 12),
                         const Divider(
                           color: Colors.white24,
@@ -841,7 +841,7 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '\$${_formatNumber(usdPrice)}',
+                  '\$${_formatNumber(usdPrice, isPrice: true)}',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.black.withValues(alpha: 0.6),
@@ -854,7 +854,7 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerRight,
             child: Text(
-              '${_formatNumber(iqdPrice)} د.ع',
+              '${_formatNumber(iqdPrice, isPrice: true)} د.ع',
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
@@ -1111,12 +1111,22 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
     }
   }
 
-  String _formatNumber(double value) {
-    if (value == 0) return '0';
-    return value.toStringAsFixed(0).replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (Match m) => '${m[1]},',
-        );
+  String _formatNumber(double value, {bool isPrice = false}) {
+    if (value == 0) return '0.00';
+    if (isPrice) {
+      // For prices, show 2 decimal places
+      final formatted = value.toStringAsFixed(2).replaceAllMapped(
+            RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+            (Match m) => '${m[1]},',
+          );
+      return formatted;
+    } else {
+      // For weights, show 0 decimal places
+      return value.toStringAsFixed(0).replaceAllMapped(
+            RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+            (Match m) => '${m[1]},',
+          );
+    }
   }
 
   String _getPurityPercentage(CaratType carat) {
