@@ -16,7 +16,6 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch gold price when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<GoldPriceProvider>().fetchGoldPrice();
     });
@@ -83,27 +82,71 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
           ),
           Consumer<GoldPriceProvider>(
             builder: (context, provider, child) {
-              return GestureDetector(
-                onTap: () => provider.fetchGoldPrice(),
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Auto-refresh indicator
+                  GestureDetector(
+                    onTap: () => provider.toggleAutoRefresh(),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: provider.isAutoRefreshEnabled
+                            ? const Color(0xFF34C759).withValues(alpha: 0.1)
+                            : Colors.grey.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                    ],
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.circle,
+                            size: 8,
+                            color: provider.isAutoRefreshEnabled
+                                ? const Color(0xFF34C759)
+                                : Colors.grey,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            provider.isAutoRefreshEnabled ? 'مباشر' : 'متوقف',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: provider.isAutoRefreshEnabled
+                                  ? const Color(0xFF34C759)
+                                  : Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.refresh_rounded,
-                    color: Color(0xFF007AFF),
-                    size: 22,
+                  const SizedBox(width: 8),
+                  // Refresh button
+                  GestureDetector(
+                    onTap: () => provider.fetchGoldPrice(),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.refresh_rounded,
+                        color: Color(0xFF007AFF),
+                        size: 22,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               );
             },
           ),
@@ -148,7 +191,7 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(
-                      Icons.star_rounded,
+                      Icons.currency_exchange,
                       color: Colors.white,
                       size: 20,
                     ),
@@ -223,12 +266,16 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          '\$${currentPriceUSD.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            '\$${_formatNumber(currentPriceUSD)}',
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ],
@@ -251,12 +298,16 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          '${currentPriceIQD.toStringAsFixed(0)} د.ع',
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            '${_formatNumber(currentPriceIQD)} د.ع',
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ],
@@ -277,6 +328,7 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
         final totalPrice = provider.finalPrice;
         final gramAmount = provider.userGramAmount;
         final pricePerGram = provider.getCurrentCaratPriceIQD();
+        final additionalPrice = provider.additionalPricePerGram;
 
         return Container(
           margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
@@ -311,9 +363,17 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
                       color: Colors.black,
                     ),
                   ),
+                  Spacer(),
+                  Icon(
+                    Icons.tune,
+                    color: Color(0xFF007AFF),
+                    size: 20,
+                  ),
                 ],
               ),
               const SizedBox(height: 20),
+
+              // Weight Input
               Text(
                 'أدخل الوزن بالجرام',
                 style: TextStyle(
@@ -359,6 +419,109 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
               const SizedBox(height: 16),
               _buildQuickWeightChips(),
               const SizedBox(height: 20),
+
+              // Additional Price Input
+              Text(
+                'سعر إضافي (مصنعية) - اختياري',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.black54,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF007AFF),
+                ),
+                decoration: InputDecoration(
+                  hintText: '0',
+                  suffixText: 'د.ع/جرام',
+                  suffixStyle: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black54,
+                  ),
+                  filled: true,
+                  fillColor: const Color(0xFFF2F2F7),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF007AFF),
+                      width: 2,
+                    ),
+                  ),
+                ),
+                onChanged: (value) {
+                  context.read<GoldPriceProvider>().updateAdditionalPricePerGram(value);
+                },
+              ),
+              const SizedBox(height: 20),
+
+              // Exchange Rate Button
+              GestureDetector(
+                onTap: () => _showExchangeRateDialog(context, provider),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF2F2F7),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFF9500).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.currency_exchange,
+                          color: Color(0xFFFF9500),
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'سعر الصرف',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black,
+                              ),
+                            ),
+                            Text(
+                              provider.getExchangeRateDisplay(),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(
+                        Icons.edit_outlined,
+                        color: Color(0xFF007AFF),
+                        size: 18,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
               if (gramAmount > 0) ...[
                 Container(
                   padding: const EdgeInsets.all(20),
@@ -376,30 +539,45 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Icon(
-                            Icons.savings_rounded,
+                            Icons.attach_money,
                             color: Colors.white,
                             size: 28,
                           ),
                           const SizedBox(width: 12),
-                          Text(
-                            provider.formatPrice(totalPrice),
-                            style: const TextStyle(
-                              fontSize: 36,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                              letterSpacing: -0.5,
+                          Flexible(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                provider.formatPrice(totalPrice),
+                                style: const TextStyle(
+                                  fontSize: 36,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        '${gramAmount.toStringAsFixed(2)} جرام × ${pricePerGram.toStringAsFixed(0)} د.ع',
+                        '${_formatNumber(gramAmount)} جرام × ${_formatNumber(pricePerGram)} د.ع',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.white.withValues(alpha: 0.9),
                         ),
                       ),
+                      if (additionalPrice > 0) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          '+ ${_formatNumber(additionalPrice)} د.ع مصنعية',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 16),
                       GestureDetector(
                         onTap: () {
@@ -445,8 +623,10 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
                         ),
                         const SizedBox(height: 16),
                         _buildDetailRow('عيار الذهب', provider.selectedCarat.displayName),
-                        _buildDetailRow('سعر الجرام', '${pricePerGram.toStringAsFixed(0)} د.ع'),
-                        _buildDetailRow('الوزن', '${gramAmount.toStringAsFixed(2)} جرام'),
+                        _buildDetailRow('سعر الجرام', '${_formatNumber(pricePerGram)} د.ع'),
+                        _buildDetailRow('الوزن', '${_formatNumber(gramAmount)} جرام'),
+                        if (additionalPrice > 0)
+                          _buildDetailRow('سعر المصنعية', '${_formatNumber(additionalPrice)} د.ع/جرام'),
                         const SizedBox(height: 12),
                         const Divider(
                           color: Colors.white24,
@@ -511,19 +691,27 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.white.withValues(alpha: 0.9),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.white.withValues(alpha: 0.9),
+              ),
             ),
           ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: isTotal ? 16 : 14,
-              fontWeight: isTotal ? FontWeight.w700 : FontWeight.w600,
-              color: Colors.white,
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontSize: isTotal ? 16 : 14,
+                  fontWeight: isTotal ? FontWeight.w700 : FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
             ),
           ),
         ],
@@ -653,7 +841,7 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '\$${usdPrice.toStringAsFixed(2)}',
+                  '\$${_formatNumber(usdPrice)}',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.black.withValues(alpha: 0.6),
@@ -662,12 +850,16 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
               ],
             ),
           ),
-          Text(
-            '${iqdPrice.toStringAsFixed(0)} د.ع',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF007AFF),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerRight,
+            child: Text(
+              '${_formatNumber(iqdPrice)} د.ع',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF007AFF),
+              ),
             ),
           ),
         ],
@@ -774,6 +966,136 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
     );
   }
 
+  void _showExchangeRateDialog(BuildContext context, GoldPriceProvider provider) {
+    final TextEditingController controller = TextEditingController(
+      text: provider.exchangeRate.toStringAsFixed(0),
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        contentPadding: EdgeInsets.zero,
+        content: Container(
+          padding: const EdgeInsets.all(24),
+          width: MediaQuery.of(context).size.width * 0.9,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF9500).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.currency_exchange,
+                  color: Color(0xFFFF9500),
+                  size: 32,
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'تغيير سعر الصرف',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'الدينار العراقي لكل دولار أمريكي',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 24),
+              TextFormField(
+                controller: controller,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black,
+                ),
+                decoration: InputDecoration(
+                  labelText: 'سعر الصرف',
+                  hintText: '1420',
+                  suffixText: 'د.ع / \$',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text(
+                        'إلغاء',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        final value = controller.text.trim();
+                        if (value.isNotEmpty) {
+                          provider.updateExchangeRate(value);
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text(
+                                'تم تحديث سعر الصرف بنجاح',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              backgroundColor: const Color(0xFF007AFF),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF007AFF),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text(
+                        'حفظ',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   String _formatTimestamp(DateTime timestamp) {
     final now = DateTime.now();
     final difference = now.difference(timestamp);
@@ -787,6 +1109,14 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
     } else {
       return '${difference.inDays} يوم';
     }
+  }
+
+  String _formatNumber(double value) {
+    if (value == 0) return '0';
+    return value.toStringAsFixed(0).replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]},',
+        );
   }
 
   String _getPurityPercentage(CaratType carat) {

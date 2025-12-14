@@ -145,15 +145,27 @@ class GoldPriceProvider with ChangeNotifier {
   }
 
   String formatPrice(double price) {
-    return '${price.toStringAsFixed(0)} د.ع';
+    if (price == 0) return '0 د.ع';
+    final formatted = price.toStringAsFixed(0).replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]},',
+    );
+    return '$formatted د.ع';
   }
 
   String formatGoldPrice(double price) {
-    return '${price.toStringAsFixed(2)} \$';
+    if (price == 0) return '0 \$';
+    final formatted = price.toStringAsFixed(2);
+    return '$formatted \$';
   }
 
   String formatIQDPrice(double price) {
-    return '${price.toStringAsFixed(0)} د.ع';
+    if (price == 0) return '0 د.ع';
+    final formatted = price.toStringAsFixed(0).replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]},',
+    );
+    return '$formatted د.ع';
   }
 
   // Get current price for selected carat
