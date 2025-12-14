@@ -3,41 +3,30 @@ import 'package:http/http.dart' as http;
 import '../models/gold_price.dart';
 
 class GoldPriceService {
-  static const String _baseUrl = 'https://gold.g.apised.com/v1/latest';
-  static const String _apiKey = 'sk_9d2cb75D088A4fBE2ED25d3698Ac2bCd06dE146b0cBfC00f';
-  
-  static const Map<String, String> _headers = {
-    'x-api-key': _apiKey,
-  };
+  // Update this to your backend URL
+  // For local development: 'http://localhost:3000'
+  // For production: 'https://your-backend-domain.com'
+  static const String _baseUrl = 'http://localhost:3000';
 
   Future<GoldPrice> fetchGoldPrice() async {
     try {
-      final Uri uri = Uri.parse('$_baseUrl?metals=XAU&base_currency=USD&currencies=USD&weight_unit=gram');
-      
-      final response = await http.get(
-        uri,
-        headers: _headers,
-      );
+      final Uri uri = Uri.parse('$_baseUrl/api/gold-price');
+      final response = await http.get(uri);
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
-        
+
         // Check if response is successful and has the expected structure
-        if (data['status'] == 'success' && 
-            data.containsKey('data') && 
-            data['data'].containsKey('metal_prices') && 
-            data['data']['metal_prices'].containsKey('XAU')) {
-          
-          final Map<String, dynamic> metalData = data['data']['metal_prices']['XAU'];
-          
-          // API returns price already in USD per gram for 24K gold
-          final double goldPricePerGram24KUSD = metalData['price'].toDouble();
+        if (data['success'] == true &&
+            data.containsKey('data') &&
+            data['data'].containsKey('goldPricePerOunceUSD')) {
+
+          // Backend returns price in USD per ounce
+          final double goldPricePerOunceUSD = data['data']['goldPricePerOunceUSD'].toDouble();
+          final double goldPricePerGram24KUSD = GoldPrice.convertOunceToGram(goldPricePerOunceUSD);
           final double goldPricePerGram21KUSD = GoldPrice.calculate21KPrice(goldPricePerGram24KUSD);
           final double goldPricePerGram18KUSD = GoldPrice.calculate18KPrice(goldPricePerGram24KUSD);
-          
-          // Convert to USD per ounce
-          final double goldPricePerOunceUSD = goldPricePerGram24KUSD * 31.1034768;
-          
+
           // Convert to IQD
           final double goldPricePerGram24KIQD = GoldPrice.convertUSDtoIQD(goldPricePerGram24KUSD);
           final double goldPricePerGram21KIQD = GoldPrice.convertUSDtoIQD(goldPricePerGram21KUSD);

@@ -7,7 +7,8 @@
 ## ✨ Features
 
 ### 💰 Real-Time Gold Pricing
-- **Live gold prices** fetched from premium APIs every 60 seconds automatically
+- **Live gold prices** fetched from backend API every 60 seconds automatically
+- **Cached data** served to all users to reduce API calls
 - **Manual refresh** options with visual indicators
 - **Automatic fallback** to mock data if API fails
 - **Live status indicators** showing connection status
@@ -58,6 +59,7 @@
 ### Prerequisites
 - Flutter SDK 3.9.2 or higher
 - Dart SDK 3.0.0 or higher
+- Node.js 16+ (for backend)
 - Android Studio / Xcode
 - Git
 
@@ -74,7 +76,14 @@
    flutter pub get
    ```
 
-3. **Run the app**
+3. **Start the backend server** (in a new terminal)
+   ```bash
+   cd backend
+   npm install
+   npm start
+   ```
+
+4. **Run the Flutter app** (in another terminal)
    ```bash
    flutter run
    ```
@@ -93,42 +102,59 @@ flutter build appbundle --release
 flutter build ios --release
 ```
 
-## 📊 API Integration
+## 🖥️ Backend Architecture
 
-The app uses a premium gold price API with the following configuration:
+The app uses a **Node.js backend service** to cache gold price data:
+
+### Backend Features
+- **Single API Call**: Fetches from Yahoo Finance once every 5 minutes
+- **Serves All Users**: Cached data served to unlimited clients
+- **Auto-Update**: Cron job updates prices every 5 minutes
+- **Fast Response**: Returns cached data in ~10ms
+- **Rate Limit Protection**: Avoids API blocking
+
+### API Integration (Flutter → Backend)
 
 ```dart
 final config = {
   method: 'get',
-  url: 'https://gold.g.apised.com/v1/latest',
-  params: {
-    'metals': 'XAU,XAG,XPT,XPD',
-    'base_currency': 'KWD',
-    'currencies': 'EUR,KWD,GBP,USD',
-    'weight_unit': 'gram'
-  },
-  headers: {
-    'x-api-key': 'sk_9d2cb75D088A4fBE2ED25d3698Ac2bCd06dE146b0cBfC00f'
-  }
+  url: 'http://localhost:3000/api/gold-price', // Your backend URL
+  params: {},
+  headers: {}
 };
 ```
+
+### Backend Endpoints
+- `GET /api/gold-price` - Get current gold price
+- `GET /api/status` - Service status
+- `GET /health` - Health check
+- `POST /api/gold-price/update` - Force update (admin)
+
+📖 **See [backend/README.md](../backend/README.md) for full backend documentation**
 
 ## 🏗️ Project Structure
 
 ```
-lib/
-├── main.dart                 # App entry point and theme configuration
-├── models/
-│   └── gold_price.dart       # Data models and carat pricing logic
-├── providers/
-│   └── gold_price_provider.dart  # State management and auto-refresh
-├── services/
-│   └── gold_price_service.dart   # API integration and data fetching
-├── screens/
-│   └── gold_calculator_screen.dart # Main app interface
-└── widgets/
-    ├── gold_price_card.dart      # Professional price display component
-    └── calculator_widget.dart    # Interactive calculator interface
+gold_app/
+├── lib/                          # Flutter app
+│   ├── main.dart
+│   ├── models/
+│   │   └── gold_price.dart       # Data models and carat pricing logic
+│   ├── providers/
+│   │   └── gold_price_provider.dart  # State management and auto-refresh
+│   ├── services/
+│   │   └── gold_price_service.dart   # Backend API integration
+│   ├── screens/
+│   │   └── gold_calculator_screen.dart # Main app interface
+│   └── widgets/
+│       ├── gold_price_card.dart      # Professional price display component
+│       └── calculator_widget.dart    # Interactive calculator interface
+└── backend/                       # Node.js backend service
+    ├── server.js                  # Express server and cron jobs
+    ├── goldPriceService.js        # Yahoo Finance integration & caching
+    ├── package.json               # Dependencies
+    ├── .env.example               # Configuration template
+    └── README.md                  # Backend documentation
 ```
 
 ## 🧮 Calculation Logic
@@ -191,7 +217,8 @@ For support and questions:
 
 - **Tajwal Font**: For beautiful Arabic typography
 - **Flutter Team**: For the amazing cross-platform framework
-- **Gold Price API**: For providing reliable market data
+- **Node.js & Express**: For backend caching infrastructure
+- **Yahoo Finance API**: For providing reliable free market data
 - **Iraqi Gold Market**: For inspiring this specialized tool
 
 ---
