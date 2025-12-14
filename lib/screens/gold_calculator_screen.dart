@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/gold_price_provider.dart';
 import '../models/gold_price.dart';
@@ -385,6 +386,9 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
               const SizedBox(height: 12),
               TextFormField(
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                ],
                 style: const TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.w700,
@@ -432,6 +436,9 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
               const SizedBox(height: 12),
               TextFormField(
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                ],
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
@@ -1019,6 +1026,9 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
                 controller: controller,
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                ],
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
