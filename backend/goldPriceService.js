@@ -25,8 +25,31 @@ class GoldPriceService {
         const result = data.chart.result[0];
         const meta = result.meta;
 
+        // Get the most accurate price - prefer quote data over meta
+        let goldPrice = meta.regularMarketPrice;
+
+        // Check indicators for more recent price data
+        if (result.indicators && result.indicators.quote && result.indicators.quote[0]) {
+          const quote = result.indicators.quote[0];
+          const closes = quote.close;
+          if (closes && closes.length > 0) {
+            // Get the last non-null close price
+            for (let i = closes.length - 1; i >= 0; i--) {
+              if (closes[i] !== null) {
+                goldPrice = closes[i];
+                break;
+              }
+            }
+          }
+        }
+
+        // Fallback: if price seems invalid (too low), use regularMarketPrice
+        if (!goldPrice || goldPrice < 1000) {
+          goldPrice = meta.regularMarketPrice || meta.previousClose;
+        }
+
         const goldPriceData = {
-          goldPricePerOunceUSD: meta.regularMarketPrice,
+          goldPricePerOunceUSD: goldPrice,
           timestamp: new Date().toISOString(),
           marketState: meta.marketState,
           previousClose: meta.previousClose,

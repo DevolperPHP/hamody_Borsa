@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => GoldPriceProvider()),
       ],
       child: MaterialApp(
-        title: 'حمودي بورصة',
+        title: 'الصايغ',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           // Modern iOS-inspired theme with white background

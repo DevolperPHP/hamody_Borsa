@@ -1,6 +1,6 @@
-# 🏆 حمودي بورصة - Gold Price Calculator
+# 🏆 الصايغ - Gold Price Calculator
 
-**حمودي بورصة** is a professional gold price calculator application designed specifically for the Iraqi market. It provides real-time gold prices, accurate calculations, and seamless currency conversion from USD to IQD.
+**الصايغ** is a professional gold price calculator application designed specifically for the Iraqi market. It provides real-time gold prices, accurate calculations, and seamless currency conversion from USD to IQD.
 
 ![App Icon](assets/images/icon.png)
 
@@ -223,6 +223,6 @@ For support and questions:
 
 ---
 
-**حمودي بورصة** - Professional gold price calculator for Iraq 🇮🇶
+**الصايغ** - Professional gold price calculator for Iraq 🇮🇶
 
 Built with ❤️ using Flutter

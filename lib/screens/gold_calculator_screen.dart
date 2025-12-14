@@ -44,9 +44,54 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
               SliverToBoxAdapter(
                 child: _buildDetailedPricesCard(),
               ),
+              SliverToBoxAdapter(
+                child: _buildLicenseSection(),
+              ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildLicenseSection() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 10, 20, 40),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Text(
+            'Made by Mohammed Majid',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.black.withValues(alpha: 0.6),
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.code_rounded,
+                size: 16,
+                color: Colors.black.withValues(alpha: 0.4),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -61,7 +106,7 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'حمودي بورصة',
+                  'الصايغ',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w700,
@@ -161,6 +206,7 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
       builder: (context, provider, child) {
         final currentPriceUSD = provider.getCurrentCaratPriceUSD();
         final currentPriceIQD = provider.getCurrentCaratPriceIQD();
+        final isOffline = provider.currentGoldPrice?.error != null;
 
         return Container(
           margin: const EdgeInsets.fromLTRB(20, 10, 20, 20),
@@ -271,7 +317,7 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
                           fit: BoxFit.scaleDown,
                           alignment: Alignment.centerRight,
                           child: Text(
-                            '\$${_formatNumber(currentPriceUSD, isPrice: true)}',
+                            isOffline ? 'غير متصل' : '\$${_formatNumber(currentPriceUSD, isPrice: true)}',
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w700,
@@ -303,7 +349,7 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
                           fit: BoxFit.scaleDown,
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            '${_formatNumber(currentPriceIQD, isPrice: true, isIQD: true)} د.ع',
+                            isOffline ? 'غير متصل' : '${_formatNumber(currentPriceIQD, isPrice: true, isIQD: true)} د.ع',
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w700,
@@ -330,6 +376,7 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
         final gramAmount = provider.userGramAmount;
         final pricePerGram = provider.getCurrentCaratPriceIQD();
         final additionalPrice = provider.additionalPricePerGram;
+        final isOffline = provider.currentGoldPrice?.error != null;
 
         return Container(
           margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
@@ -555,7 +602,7 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
                               child: Text(
-                                provider.formatPrice(totalPrice),
+                                isOffline ? 'غير متصل' : provider.formatPrice(totalPrice),
                                 style: const TextStyle(
                                   fontSize: 36,
                                   fontWeight: FontWeight.w800,
@@ -569,7 +616,7 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        '${_formatNumber(gramAmount)} جرام × ${_formatNumber(pricePerGram, isPrice: true, isIQD: true)} د.ع',
+                        isOffline ? 'غير متصل' : '${_formatNumber(gramAmount)} جرام × ${_formatNumber(pricePerGram, isPrice: true, isIQD: true)} د.ع',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.white.withValues(alpha: 0.9),

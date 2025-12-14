@@ -9,51 +9,46 @@ class GoldPriceService {
   static const String _baseUrl = 'http://localhost:3000';
 
   Future<GoldPrice> fetchGoldPrice() async {
-    try {
-      final Uri uri = Uri.parse('$_baseUrl/api/gold-price');
-      final response = await http.get(uri);
+    final Uri uri = Uri.parse('$_baseUrl/api/gold-price');
+    final response = await http.get(uri);
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = json.decode(response.body);
 
-        // Check if response is successful and has the expected structure
-        if (data['success'] == true &&
-            data.containsKey('data') &&
-            data['data'].containsKey('goldPricePerOunceUSD')) {
+      // Check if response is successful and has the expected structure
+      if (data['success'] == true &&
+          data.containsKey('data') &&
+          data['data'].containsKey('goldPricePerOunceUSD')) {
 
-          // Backend returns price in USD per ounce
-          final double goldPricePerOunceUSD = data['data']['goldPricePerOunceUSD'].toDouble();
-          final double goldPricePerGram24KUSD = GoldPrice.convertOunceToGram(goldPricePerOunceUSD);
-          final double goldPricePerGram21KUSD = GoldPrice.calculate21KPrice(goldPricePerGram24KUSD);
-          final double goldPricePerGram18KUSD = GoldPrice.calculate18KPrice(goldPricePerGram24KUSD);
+        // Backend returns price in USD per ounce
+        final double goldPricePerOunceUSD = data['data']['goldPricePerOunceUSD'].toDouble();
+        final double goldPricePerGram24KUSD = GoldPrice.convertOunceToGram(goldPricePerOunceUSD);
+        final double goldPricePerGram21KUSD = GoldPrice.calculate21KPrice(goldPricePerGram24KUSD);
+        final double goldPricePerGram18KUSD = GoldPrice.calculate18KPrice(goldPricePerGram24KUSD);
 
-          // Convert to IQD
-          final double goldPricePerGram24KIQD = GoldPrice.convertUSDtoIQD(goldPricePerGram24KUSD);
-          final double goldPricePerGram21KIQD = GoldPrice.convertUSDtoIQD(goldPricePerGram21KUSD);
-          final double goldPricePerGram18KIQD = GoldPrice.convertUSDtoIQD(goldPricePerGram18KUSD);
-          final double goldPricePerGramIQD = goldPricePerGram24KIQD; // Default to 24K for general display
+        // Convert to IQD
+        final double goldPricePerGram24KIQD = GoldPrice.convertUSDtoIQD(goldPricePerGram24KUSD);
+        final double goldPricePerGram21KIQD = GoldPrice.convertUSDtoIQD(goldPricePerGram21KUSD);
+        final double goldPricePerGram18KIQD = GoldPrice.convertUSDtoIQD(goldPricePerGram18KUSD);
+        final double goldPricePerGramIQD = goldPricePerGram24KIQD; // Default to 24K for general display
 
-          return GoldPrice(
-            goldPricePerOunceUSD: goldPricePerOunceUSD,
-            goldPricePerGramUSD: goldPricePerGram24KUSD,
-            goldPricePerGramIQD: goldPricePerGramIQD,
-            goldPricePerGram24KUSD: goldPricePerGram24KUSD,
-            goldPricePerGram24KIQD: goldPricePerGram24KIQD,
-            goldPricePerGram21KUSD: goldPricePerGram21KUSD,
-            goldPricePerGram21KIQD: goldPricePerGram21KIQD,
-            goldPricePerGram18KUSD: goldPricePerGram18KUSD,
-            goldPricePerGram18KIQD: goldPricePerGram18KIQD,
-            timestamp: DateTime.now(),
-          );
-        } else {
-          throw Exception('بيانات غير صحيحة من API');
-        }
+        return GoldPrice(
+          goldPricePerOunceUSD: goldPricePerOunceUSD,
+          goldPricePerGramUSD: goldPricePerGram24KUSD,
+          goldPricePerGramIQD: goldPricePerGramIQD,
+          goldPricePerGram24KUSD: goldPricePerGram24KUSD,
+          goldPricePerGram24KIQD: goldPricePerGram24KIQD,
+          goldPricePerGram21KUSD: goldPricePerGram21KUSD,
+          goldPricePerGram21KIQD: goldPricePerGram21KIQD,
+          goldPricePerGram18KUSD: goldPricePerGram18KUSD,
+          goldPricePerGram18KIQD: goldPricePerGram18KIQD,
+          timestamp: DateTime.now(),
+        );
       } else {
-        throw Exception('فشل في جلب أسعار الذهب: ${response.statusCode}');
+        throw Exception('بيانات غير صحيحة من API');
       }
-    } catch (e) {
-      // If API fails, use mock data for demonstration
-      return getMockGoldPrice();
+    } else {
+      throw Exception('فشل في جلب أسعار الذهب: ${response.statusCode}');
     }
   }
 

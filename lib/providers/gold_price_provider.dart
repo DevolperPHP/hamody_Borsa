@@ -57,20 +57,15 @@ class GoldPriceProvider with ChangeNotifier {
         notifyListeners();
       }
 
-      // Try to fetch from API first, fallback to mock data
-      GoldPrice goldPrice;
-      try {
-        goldPrice = await _goldPriceService.fetchGoldPrice();
-      } catch (e) {
-        // If API fails, use mock data
-        goldPrice = await _goldPriceService.getMockGoldPrice();
-      }
+      // Fetch from API - no fallback to mock data
+      final goldPrice = await _goldPriceService.fetchGoldPrice();
 
       _currentGoldPrice = goldPrice;
       _calculateFinalPrice();
       notifyListeners();
     } catch (e) {
-      _currentGoldPrice = GoldPrice.error('فشل في جلب أسعار الذهب');
+      // Show error state when offline or API fails
+      _currentGoldPrice = GoldPrice.error('غير متصل بالإنترنت');
       notifyListeners();
     }
   }

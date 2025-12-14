@@ -1,4 +1,4 @@
-package com.example.gold_app
+package com.hamoudi.borsa
 
 import io.flutter.embedding.android.FlutterActivity
 
