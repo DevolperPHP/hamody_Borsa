@@ -230,7 +230,7 @@ class GoldPriceCard extends StatelessWidget {
           title: 'الأونصة',
           subtitle: 'السعر العالمي',
           usdPrice: goldPrice.goldPricePerOunceUSD,
-          iqdPrice: goldPrice.goldPricePerOunceUSD * 1420, // Quick conversion for display
+          iqdPrice: goldPrice.goldPricePerOunceUSD * 1480, // Quick conversion for display
           icon: Icons.trending_up_rounded,
           color: const Color(0xFF5856D6),
           iconColor: const Color(0xFF5856D6),

@@ -95,9 +95,9 @@ class GoldPrice {
     return ouncePrice / gramsPerOunce;
   }
 
-  // Convert USD to IQD (multiply by 1420 as specified)
+  // Convert USD to IQD (multiply by 1480 as specified)
   static double convertUSDtoIQD(double usdPrice) {
-    return usdPrice * 1420;
+    return usdPrice * 1480;
   }
 
   // Calculate carat prices

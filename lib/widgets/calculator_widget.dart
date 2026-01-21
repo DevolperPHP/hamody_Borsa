@@ -936,7 +936,7 @@ class _CalculatorWidgetState extends State<CalculatorWidget> {
                   ),
                   decoration: const InputDecoration(
                     labelText: 'سعر الصرف',
-                    hintText: '1420',
+                    hintText: '1480',
                     suffixText: 'د.ع/\$',
                     prefixIcon: Icon(
                       Icons.attach_money,

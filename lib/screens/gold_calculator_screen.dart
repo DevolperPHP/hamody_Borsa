@@ -12,7 +12,7 @@ class GoldCalculatorScreen extends StatefulWidget {
 }
 
 class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
-  bool _showDetails = false;
+  bool _showDetails = true;
 
   @override
   void initState() {
@@ -29,25 +29,35 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
       child: Scaffold(
         backgroundColor: const Color(0xFFF2F2F7),
         body: SafeArea(
-          child: CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              SliverToBoxAdapter(
-                child: _buildHeader(),
-              ),
-              SliverToBoxAdapter(
-                child: _buildQuickPricesCard(),
-              ),
-              SliverToBoxAdapter(
-                child: _buildCalculatorSection(),
-              ),
-              SliverToBoxAdapter(
-                child: _buildDetailedPricesCard(),
-              ),
-              SliverToBoxAdapter(
-                child: _buildLicenseSection(),
-              ),
-            ],
+          child: RefreshIndicator(
+            color: const Color(0xFF007AFF),
+            backgroundColor: Colors.white,
+            onRefresh: () async {
+              await context.read<GoldPriceProvider>().fetchGoldPrice();
+            },
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: _buildHeader(),
+                ),
+                SliverToBoxAdapter(
+                  child: _buildQuickPricesCard(),
+                ),
+                SliverToBoxAdapter(
+                  child: _buildOuncePriceCard(),
+                ),
+                SliverToBoxAdapter(
+                  child: _buildCalculatorSection(),
+                ),
+                SliverToBoxAdapter(
+                  child: _buildDetailedPricesCard(),
+                ),
+                SliverToBoxAdapter(
+                  child: _buildLicenseSection(),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -272,24 +282,24 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: Colors.white.withValues(alpha: 0.8),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            provider.selectedCarat.displayName,
+                            'اختيار العيار : ${provider.selectedCarat.displayName}',
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: Color(0xFF007AFF),
                             ),
                           ),
                           const SizedBox(width: 4),
                           const Icon(
                             Icons.keyboard_arrow_down,
-                            color: Colors.white,
+                            color: Color(0xFF007AFF),
                             size: 18,
                           ),
                         ],
@@ -369,6 +379,83 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
     );
   }
 
+  Widget _buildOuncePriceCard() {
+    return Consumer<GoldPriceProvider>(
+      builder: (context, provider, child) {
+        final goldPrice = provider.currentGoldPrice;
+        final isOffline = goldPrice?.error != null;
+
+        return Container(
+          margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF5856D6).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.trending_up_rounded,
+                  color: Color(0xFF5856D6),
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'سعر الأونصة',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'السعر العالمي الحالي',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.black.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerRight,
+                child: Text(
+                  isOffline ? 'غير متصل' : '\$${_formatNumber(goldPrice?.goldPricePerOunceUSD ?? 0, isPrice: true)}',
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF5856D6),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildCalculatorSection() {
     return Consumer<GoldPriceProvider>(
       builder: (context, provider, child) {
@@ -377,6 +464,7 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
         final pricePerGram = provider.getCurrentCaratPriceIQD();
         final additionalPrice = provider.additionalPricePerGram;
         final isOffline = provider.currentGoldPrice?.error != null;
+        final basePrice = pricePerGram * gramAmount;
 
         return Container(
           margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
@@ -687,6 +775,25 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
                           height: 1,
                         ),
                         const SizedBox(height: 12),
+                        // Base price without additional cost
+                        _buildDetailRow(
+                          'السعر الأساسي',
+                          provider.formatPrice(basePrice),
+                          isSubtotal: true,
+                        ),
+                        // Additional cost total
+                        if (additionalPrice > 0)
+                          _buildDetailRow(
+                            'تكلفة المصنعية',
+                            provider.formatPrice(additionalPrice * gramAmount),
+                            isSubtotal: true,
+                          ),
+                        const SizedBox(height: 12),
+                        const Divider(
+                          color: Colors.white24,
+                          height: 1,
+                        ),
+                        const SizedBox(height: 12),
                         _buildDetailRow(
                           'الإجمالي',
                           provider.formatPrice(totalPrice),
@@ -739,7 +846,7 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
     );
   }
 
-  Widget _buildDetailRow(String label, String value, {bool isTotal = false}) {
+  Widget _buildDetailRow(String label, String value, {bool isTotal = false, bool isSubtotal = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -750,7 +857,7 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
               label,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.white.withValues(alpha: 0.9),
+                color: isSubtotal ? Colors.white.withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.9),
               ),
             ),
           ),
@@ -762,7 +869,11 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
                 value,
                 style: TextStyle(
                   fontSize: isTotal ? 16 : 14,
-                  fontWeight: isTotal ? FontWeight.w700 : FontWeight.w600,
+                  fontWeight: isTotal
+                      ? FontWeight.w700
+                      : isSubtotal
+                          ? FontWeight.w600
+                          : FontWeight.w600,
                   color: Colors.white,
                 ),
               ),
@@ -1083,7 +1194,7 @@ class _GoldCalculatorScreenState extends State<GoldCalculatorScreen> {
                 ),
                 decoration: InputDecoration(
                   labelText: 'سعر الصرف',
-                  hintText: '1420',
+                  hintText: '1480',
                   suffixText: 'د.ع / \$',
                   border: OutlineInputBorder(),
                 ),

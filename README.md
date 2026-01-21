@@ -16,7 +16,7 @@
 ### 🧮 Advanced Calculator
 - **Multiple carat options**: 24K (99.9%), 21K (87.5%), 18K (75%)
 - **Automatic price calculation** with purity percentages
-- **User-configurable exchange rates** (default: 1420 IQD per USD)
+- **User-configurable exchange rates** (default: 1480 IQD per USD)
 - **Additional price per gram** for manufacturing costs
 - **Real-time calculation updates** as user types
 
@@ -174,7 +174,7 @@ The app follows this calculation flow:
 ## 🎯 Default Configuration
 
 - **Default Carat**: 21K (87.5% purity) - most commonly used in Iraq
-- **Default Exchange Rate**: 1420 IQD per USD
+- **Default Exchange Rate**: 1480 IQD per USD
 - **Auto-refresh**: Enabled (60-second intervals)
 - **Language**: Arabic (RTL)
 - **Currency Display**: IQD (Iraqi Dinar)

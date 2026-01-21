@@ -9,7 +9,7 @@ class GoldPriceProvider with ChangeNotifier {
   double _userGramAmount = 0.0;
   double _additionalPricePerGram = 0.0;
   double _finalPrice = 0.0;
-  double _exchangeRate = 1420.0; // Default USD to IQD rate
+  double _exchangeRate = 1480.0; // Default USD to IQD rate
   CaratType _selectedCarat = CaratType.k21;
   Timer? _priceUpdateTimer;
   bool _isAutoRefreshEnabled = true;
@@ -57,15 +57,37 @@ class GoldPriceProvider with ChangeNotifier {
         notifyListeners();
       }
 
-      // Fetch from API - no fallback to mock data
-      final goldPrice = await _goldPriceService.fetchGoldPrice();
+      // First test if we can reach the backend
+      final bool isConnected = await _goldPriceService.testConnection();
+      if (!isConnected) {
+        print('❌ Cannot reach backend server');
+        _currentGoldPrice = GoldPrice.error('لا يمكن الوصول للخادم');
+        notifyListeners();
+        return;
+      }
 
-      _currentGoldPrice = goldPrice;
+      // Try to fetch from API
+      try {
+        final goldPrice = await _goldPriceService.fetchGoldPrice();
+        _currentGoldPrice = goldPrice;
+        print('✅ Successfully fetched gold price from API');
+        print('📊 Price details:');
+        print('  - Per ounce USD: ${goldPrice.goldPricePerOunceUSD}');
+        print('  - Per gram 24K USD: ${goldPrice.goldPricePerGram24KUSD}');
+        print('  - Per gram 24K IQD: ${goldPrice.goldPricePerGram24KIQD}');
+        print('  - Timestamp: ${goldPrice.timestamp}');
+      } catch (apiError) {
+        print('⚠️ API fetch failed: $apiError');
+        print('🔄 API failed, showing error');
+
+        _currentGoldPrice = GoldPrice.error('فشل في تحميل البيانات من الخادم');
+      }
+
       _calculateFinalPrice();
       notifyListeners();
     } catch (e) {
-      // Show error state when offline or API fails
-      _currentGoldPrice = GoldPrice.error('غير متصل بالإنترنت');
+      print('💥 Unexpected error in fetchGoldPrice: $e');
+      _currentGoldPrice = GoldPrice.error('خطأ غير متوقع');
       notifyListeners();
     }
   }
@@ -83,7 +105,7 @@ class GoldPriceProvider with ChangeNotifier {
   }
 
   void updateExchangeRate(String value) {
-    _exchangeRate = double.tryParse(value) ?? 1420.0;
+    _exchangeRate = double.tryParse(value) ?? 1480.0;
     // Recalculate gold prices with new exchange rate
     _recalculateGoldPrices();
     _calculateFinalPrice();
@@ -189,5 +211,19 @@ class GoldPriceProvider with ChangeNotifier {
     } else {
       return 'التحديث التلقائي معطل';
     }
+  }
+
+  // Debug method to check current price
+  String getDebugInfo() {
+    if (_currentGoldPrice == null) {
+      return 'No data loaded';
+    }
+    if (_currentGoldPrice!.isLoading) {
+      return 'Loading...';
+    }
+    if (_currentGoldPrice!.error != null) {
+      return 'Error: ${_currentGoldPrice!.error}';
+    }
+    return 'Price: \$${_currentGoldPrice!.goldPricePerOunceUSD.toStringAsFixed(2)}/ounce';
   }
 }
