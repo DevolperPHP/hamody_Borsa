@@ -7,7 +7,7 @@ class GoldPriceService {
   // Update this to your backend URL
   // For local development: 'http://localhost:3000'
   // For production: 'https://gold-price-backend-production.up.railway.app'
-  static const String _baseUrl = 'http://localhost:3000';
+  static const String _baseUrl = 'http://yogok0000gg8s0kcco8k44k0.91.99.239.11.sslip.io';
 
   Future<GoldPrice> fetchGoldPrice() async {
     try {
